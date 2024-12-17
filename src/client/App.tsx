@@ -1,24 +1,35 @@
-import { Box, Button } from "@mui/material";
-import reactLogo from "./assets/react.svg";
-import { useSnackbar } from "notistack";
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import Home from "./components/Home";
+import { trpc } from "./utils/trpc";
+import { httpBatchLink } from "@trpc/react-query";
 
 function App() {
-  const { enqueueSnackbar } = useSnackbar()
-  return (
-    <div>
-      <h1>Hello World</h1>
-      <Button variant="contained" onClick={() => {
-        enqueueSnackbar(<Box display={"flex"} justifyContent={"center"} alignItems={"center"} gap={"0.5rem"}>
-          <div>
-            Hello World
-          </div>
-          <img src={reactLogo} />
-        </Box>, {
-          variant: "success"
-        })
-      }}>Test1</Button>
+  const [queryClient] = useState(() => new QueryClient());
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: location.origin + '/trpc',
+          // You can pass any HTTP headers you wish here
+          async headers() {
+            return {
+              // authorization: getAuthCookie(),
+            };
+          },
+        }),
+      ],
+    }),
+  );
 
-    </div>
+  return (
+    <>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <Home />
+        </QueryClientProvider>
+      </trpc.Provider>
+    </>
   );
 }
 
